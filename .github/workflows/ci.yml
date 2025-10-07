@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix client
 
-      # BuildSessionId を生成して JSON に出力
+      # BuildSessionId を生成して JSON に保存
       - name: SeaLights Config (create BuildSessionId)
         run: |
           npx slnodejs config \
@@ -28,13 +28,11 @@ jobs:
             --appname demo-app \
             --branch main \
             --build ${{ github.run_id }} \
-            --out buildSessionId.json
+            > buildSessionId.json
 
-      # JSONそのまま出力（デバッグ用）
       - name: Show BuildSessionId raw output
         run: cat buildSessionId.json
 
-      # buildSessionId を取り出して環境変数に保存
       - name: Extract BuildSessionId
         id: extract
         run: |
