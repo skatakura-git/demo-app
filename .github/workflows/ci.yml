@@ -9,30 +9,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20   # 👈 Node.js を 20 に変更
 
       - name: Install dependencies
         run: npm install --prefix client
 
-      - name: Show SeaLights Agent version
-        run: npx slnodejs --version
+      - name: Show SeaLights Agent help   # 👈 バージョン確認を help に変更
+        run: npx slnodejs --help
 
-
-      # BuildSessionId を生成して JSON に保存
       - name: SeaLights Config (create BuildSessionId)
         run: |
           npx slnodejs config \
             --token ${{ secrets.SL_TOKEN }} \
             --appname demo-app \
             --branch main \
-            --build ${{ github.run_id }} \
-            > buildSessionId.json
+            --build ${{ github.run_id }} > buildSessionId.json
 
       - name: Show BuildSessionId raw output
         run: cat buildSessionId.json
