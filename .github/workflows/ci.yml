@@ -22,34 +22,38 @@ jobs:
         run: npm install --prefix client
 
       # 1. BuildSessionId を生成
-      - name: SeaLights Config
+      - name: SeaLights Create Build Session ID
         run: |
-          npx slnodejs config \
+          npx slnodejs createBuildSessionId \
             --token ${{ secrets.SL_TOKEN }} \
             --appname demo-app \
             --branch main \
-            --build 1.0.0 \
+            --build ${{ github.run_id }} \
             --buildsessionidfile buildSessionId.txt
-      # 生成されたファイルの中身を表示（デバッグ用）
-      - name: Show BuildSessionId
-        run: cat buildSessionId.txt
 
-      # 2. テストステージ開始
+      # 2. ちゃんとファイルができたか確認
+      - name: Show BuildSessionId
+        run: |
+          ls -la
+          echo "----- buildSessionId.txt -----"
+          cat buildSessionId.txt || echo "buildSessionId.txt が存在しません"
+
+      # 3. テストステージ開始
       - name: SeaLights Start
         run: npx slnodejs start --buildsessionidfile buildSessionId.txt --testStage "unit-tests"
 
-      # 3. ソーススキャン
+      # 4. ソーススキャン
       - name: SeaLights Scan
         run: npx slnodejs scan --buildsessionidfile buildSessionId.txt
 
-      # 4. 実際のテストを実行
+      # 5. 実際のテスト
       - name: Run tests
         run: npm test --prefix client
 
-      # 5. テスト結果をアップロード
+      # 6. レポート送信
       - name: SeaLights Upload Reports
         run: npx slnodejs uploadReports --buildsessionidfile buildSessionId.txt
 
-      # 6. テストセッション終了
+      # 7. セッション終了
       - name: SeaLights End
         run: npx slnodejs end --buildsessionidfile buildSessionId.txt
