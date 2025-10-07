@@ -1,0 +1,5 @@
+{
+  "token": "${SL_TOKEN}",
+  "appName": "demo-app",
+  "branchName": "main"
+}
