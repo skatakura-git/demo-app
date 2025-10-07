@@ -24,8 +24,9 @@ jobs:
       - name: Show SeaLights Agent help   # 👈 バージョン確認を help に変更
         run: npx slnodejs --help
 
-      - name: SeaLights Config (create BuildSessionId)
+      - name: SeaLights Config (create BuildSessionId with debug)
         run: |
+          export NODE_DEBUG=sl
           npx slnodejs config \
             --token ${{ secrets.SL_TOKEN }} \
             --appname demo-app \
