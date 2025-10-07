@@ -9,61 +9,39 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. リポジトリをチェックアウト
       - uses: actions/checkout@v3
 
-      # 2. Node.js セットアップ
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      # 3. 依存パッケージのインストール（client 側を例に）
       - name: Install dependencies
         run: npm install --prefix client
 
-      # 4. SeaLights Config (BuildSessionId 生成)
-      - name: SeaLights Config
+      - name: SeaLights Create BuildSessionId
         run: |
-          npx slnodejs config \
+          npx slnodejs buildsessionid \
             --token ${{ secrets.SL_TOKEN }} \
             --appname demo-app \
             --branch main \
             --build ${{ github.run_id }} > buildSessionId.txt
 
-      # 5. BuildSessionId の中身確認
       - name: Show BuildSessionId
-        run: |
-          echo "Generated BuildSessionId:"
-          cat buildSessionId.txt
+        run: cat buildSessionId.txt
 
-      # 6. SeaLights Start
       - name: SeaLights Start
-        run: |
-          npx slnodejs start \
-            --buildsessionid $(cat buildSessionId.txt) \
-            --testStage "UnitTests"
+        run: npx slnodejs start --buildsessionid $(cat buildSessionId.txt) --testStage "UnitTests"
 
-      # 7. SeaLights Scan
       - name: SeaLights Scan
-        run: |
-          npx slnodejs scan \
-            --buildsessionid $(cat buildSessionId.txt)
+        run: npx slnodejs scan --buildsessionid $(cat buildSessionId.txt)
 
-      # 8. 実際のテスト実行
       - name: Run tests
         run: npm test --prefix client
 
-      # 9. SeaLights Upload Reports
       - name: SeaLights Upload Reports
-        run: |
-          npx slnodejs uploadReports \
-            --buildsessionid $(cat buildSessionId.txt)
+        run: npx slnodejs uploadReports --buildsessionid $(cat buildSessionId.txt)
 
-      # 10. SeaLights End
       - name: SeaLights End
-        run: |
-          npx slnodejs end \
-            --buildsessionid $(cat buildSessionId.txt)
+        run: npx slnodejs end --buildsessionid $(cat buildSessionId.txt)
