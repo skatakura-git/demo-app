@@ -22,7 +22,7 @@ jobs:
         run: npm install --prefix client
 
       - name: SeaLights Build
-        run: npx slnodejs build --configfile sealights.config.json
+        run: npx slnodejs build --config-file sealights.config.json
         env:
           SL_TOKEN: ${{ secrets.SL_TOKEN }}
 
