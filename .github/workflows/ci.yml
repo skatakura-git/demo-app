@@ -11,49 +11,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. リポジトリをチェックアウト
       - uses: actions/checkout@v3
 
+      # 2. Node.js セットアップ
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      # 3. 依存パッケージのインストール（client 側を例に）
       - name: Install dependencies
         run: npm install --prefix client
 
-      # BuildSessionId を作成
-      - name: SeaLights Create Build Session ID
+      # 4. SeaLights Config (BuildSessionId 生成)
+      - name: SeaLights Config
         run: |
-          npx slnodejs createBuildSessionId \
+          npx slnodejs config \
             --token ${{ secrets.SL_TOKEN }} \
             --appname demo-app \
             --branch main \
-            --build ${{ github.run_id }} \
-            --buildsessionidfile buildSessionId.txt
+            --build ${{ github.run_id }} > buildSessionId.txt
 
-      # BuildSessionId が生成されているか確認
+      # 5. BuildSessionId の中身確認
       - name: Show BuildSessionId
         run: |
-          ls -la
-          echo "----- buildSessionId.txt -----"
-          cat buildSessionId.txt || echo "buildSessionId.txt が存在しません"
+          echo "Generated BuildSessionId:"
+          cat buildSessionId.txt
 
-      # テストセッション開始
+      # 6. SeaLights Start
       - name: SeaLights Start
-        run: npx slnodejs start --buildsessionidfile buildSessionId.txt --testStage "UnitTests"
+        run: |
+          npx slnodejs start \
+            --buildsessionid $(cat buildSessionId.txt) \
+            --testStage "UnitTests"
 
-      # ソーススキャン
+      # 7. SeaLights Scan
       - name: SeaLights Scan
-        run: npx slnodejs scan --buildsessionidfile buildSessionId.txt
+        run: |
+          npx slnodejs scan \
+            --buildsessionid $(cat buildSessionId.txt)
 
-      # 実際のテスト実行
+      # 8. 実際のテスト実行
       - name: Run tests
         run: npm test --prefix client
 
-      # レポートアップロード
+      # 9. SeaLights Upload Reports
       - name: SeaLights Upload Reports
-        run: npx slnodejs uploadReports --buildsessionidfile buildSessionId.txt
+        run: |
+          npx slnodejs uploadReports \
+            --buildsessionid $(cat buildSessionId.txt)
 
-      # テストセッション終了
+      # 10. SeaLights End
       - name: SeaLights End
-        run: npx slnodejs end --buildsessionidfile buildSessionId.txt
+        run: |
+          npx slnodejs end \
+            --buildsessionid $(cat buildSessionId.txt)
