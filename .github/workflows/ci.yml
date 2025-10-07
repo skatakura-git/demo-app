@@ -21,14 +21,15 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix client
 
-      # 1. セッションIDを生成
+      # 1. セッションIDを生成してファイルに保存
       - name: SeaLights Config
         run: |
           npx slnodejs config \
             --token ${{ secrets.SL_TOKEN }} \
             --appname demo-app \
             --branch main \
-            --build ${{ github.run_id }}
+            --build ${{ github.run_id }} \
+            --buildsessionidfile buildSessionId
 
       # 2. テストセッションを開始
       - name: SeaLights Start
