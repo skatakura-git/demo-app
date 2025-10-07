@@ -20,6 +20,10 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix client
 
+      - name: Show SeaLights Agent version
+        run: npx slnodejs --version
+
+
       # BuildSessionId を生成して JSON に保存
       - name: SeaLights Config (create BuildSessionId)
         run: |
