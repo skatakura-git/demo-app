@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix client
 
-      # BuildSessionId を生成（config コマンド）
+      # BuildSessionId を生成して JSON に出力
       - name: SeaLights Config (create BuildSessionId)
         run: |
           npx slnodejs config \
@@ -28,31 +28,38 @@ jobs:
             --appname demo-app \
             --branch main \
             --build ${{ github.run_id }} \
-            > buildSessionId.json
+            --out buildSessionId.json
 
-      - name: Show BuildSessionId
+      # JSONそのまま出力（デバッグ用）
+      - name: Show BuildSessionId raw output
         run: cat buildSessionId.json
 
-      # JSON から buildSessionId を取り出して各ステップで利用
-      - name: SeaLights Start
+      # buildSessionId を取り出して環境変数に保存
+      - name: Extract BuildSessionId
+        id: extract
         run: |
           BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
-          npx slnodejs start --buildsessionid $BUILD_SESSION_ID --testStage "UnitTests"
+          echo "BUILD_SESSION_ID=$BUILD_SESSION_ID" >> $GITHUB_ENV
+
+      - name: SeaLights Start
+        run: npx slnodejs start --buildsessionid $BUILD_SESSION_ID --testStage "UnitTests"
+        env:
+          BUILD_SESSION_ID: ${{ env.BUILD_SESSION_ID }}
 
       - name: SeaLights Scan
-        run: |
-          BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
-          npx slnodejs scan --buildsessionid $BUILD_SESSION_ID
+        run: npx slnodejs scan --buildsessionid $BUILD_SESSION_ID
+        env:
+          BUILD_SESSION_ID: ${{ env.BUILD_SESSION_ID }}
 
       - name: Run tests
         run: npm test --prefix client
 
       - name: SeaLights Upload Reports
-        run: |
-          BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
-          npx slnodejs uploadReports --buildsessionid $BUILD_SESSION_ID
+        run: npx slnodejs uploadReports --buildsessionid $BUILD_SESSION_ID
+        env:
+          BUILD_SESSION_ID: ${{ env.BUILD_SESSION_ID }}
 
       - name: SeaLights End
-        run: |
-          BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
-          npx slnodejs end --buildsessionid $BUILD_SESSION_ID
+        run: npx slnodejs end --buildsessionid $BUILD_SESSION_ID
+        env:
+          BUILD_SESSION_ID: ${{ env.BUILD_SESSION_ID }}
