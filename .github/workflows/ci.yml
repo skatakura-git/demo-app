@@ -21,10 +21,46 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix client
 
-      - name: SeaLights Build
-        run: npx slnodejs build --config sealights.config.json
-        env:
-          SL_TOKEN: ${{ secrets.SL_TOKEN }}
+      # 1. セッションIDを生成
+      - name: SeaLights Config
+        run: |
+          npx slnodejs config \
+            --token ${{ secrets.SL_TOKEN }} \
+            --appname demo-app \
+            --branch main \
+            --build ${{ github.run_id }}
+      
+      # 2. ソースコードスキャン
+      - name: SeaLights Scan
+        run: |
+          npx slnodejs scan \
+            --token ${{ secrets.SL_TOKEN }} \
+            --buildsessionidfile buildSessionId \
+            --workspacepath . \
+            --scm git
 
+      # 3. テスト開始
+      - name: SeaLights Start
+        run: |
+          npx slnodejs start \
+            --token ${{ secrets.SL_TOKEN }} \
+            --buildsessionidfile buildSessionId \
+            --teststage "unit-tests"
+
+      # 4. 実際のテスト実行
       - name: Run tests
         run: npm test --prefix client
+
+      # 5. レポートアップロード
+      - name: SeaLights Upload Reports
+        run: |
+          npx slnodejs uploadReports \
+            --token ${{ secrets.SL_TOKEN }} \
+            --buildsessionidfile buildSessionId
+
+      # 6. テスト終了
+      - name: SeaLights End
+        run: |
+          npx slnodejs end \
+            --token ${{ secrets.SL_TOKEN }} \
+            --buildsessionidfile buildSessionId
