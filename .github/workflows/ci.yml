@@ -20,28 +20,39 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix client
 
-      - name: SeaLights Create BuildSessionId
+      # BuildSessionId を生成（config コマンド）
+      - name: SeaLights Config (create BuildSessionId)
         run: |
-          npx slnodejs buildsessionid \
+          npx slnodejs config \
             --token ${{ secrets.SL_TOKEN }} \
             --appname demo-app \
             --branch main \
-            --build ${{ github.run_id }} > buildSessionId.txt
+            --build ${{ github.run_id }} \
+            > buildSessionId.json
 
       - name: Show BuildSessionId
-        run: cat buildSessionId.txt
+        run: cat buildSessionId.json
 
+      # JSON から buildSessionId を取り出して各ステップで利用
       - name: SeaLights Start
-        run: npx slnodejs start --buildsessionid $(cat buildSessionId.txt) --testStage "UnitTests"
+        run: |
+          BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
+          npx slnodejs start --buildsessionid $BUILD_SESSION_ID --testStage "UnitTests"
 
       - name: SeaLights Scan
-        run: npx slnodejs scan --buildsessionid $(cat buildSessionId.txt)
+        run: |
+          BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
+          npx slnodejs scan --buildsessionid $BUILD_SESSION_ID
 
       - name: Run tests
         run: npm test --prefix client
 
       - name: SeaLights Upload Reports
-        run: npx slnodejs uploadReports --buildsessionid $(cat buildSessionId.txt)
+        run: |
+          BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
+          npx slnodejs uploadReports --buildsessionid $BUILD_SESSION_ID
 
       - name: SeaLights End
-        run: npx slnodejs end --buildsessionid $(cat buildSessionId.txt)
+        run: |
+          BUILD_SESSION_ID=$(cat buildSessionId.json | jq -r .buildSessionId)
+          npx slnodejs end --buildsessionid $BUILD_SESSION_ID
